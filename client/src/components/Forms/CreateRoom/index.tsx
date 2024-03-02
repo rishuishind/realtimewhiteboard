@@ -1,7 +1,7 @@
 
 const CreateRoom = () => {
   return (
-    <div className="border-2 border-black h-96 w-auto">
+    <div className="border-2 border-black h-96 w-auto bg-white">
       <h3 className="font-bold text-center text-blue-700">Create Room</h3>
       <form className="p-4">
         <input type="text" placeholder="Enter your name" className="py-1 px-1 border-2 mb-2 rounded-sm" />

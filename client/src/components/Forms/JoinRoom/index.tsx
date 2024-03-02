@@ -1,7 +1,7 @@
 
 const JoinRoom = () => {
   return (
-    <div className="border-2 border-black h-96 w-3/12">
+    <div className="border-2 border-black h-96 w-3/12 bg-white">
       <h3 className="font-bold text-center text-blue-700">Join Room</h3>
       <form className="p-4 flex flex-col">
         <input type="text" placeholder="Enter your name" className="py-1 px-1 border-2 mb-2 rounded-sm" />

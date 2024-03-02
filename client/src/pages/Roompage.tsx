@@ -36,149 +36,167 @@ const Roompage = () => {
 
     const strokeColor = '#000000';
 
-    const onPointerUp=()=>{
-        isPainting.current=false;
-    }
-    const onPointerDown=()=>{
-        if(action===ACTIONS.SELECT) return;
-        const stage = stageRef.current;
-        const {x,y} = stage.getPointerPosition();
-        const id = uuidv4();
+  const onPointerUp = () => {
+    isPainting.current = false;
+  };
+  const onPointerDown = () => {
+    if (action === ACTIONS.SELECT) return;
+    const stage = stageRef.current;
+    const { x, y } = stage.getPointerPosition();
+    const id = uuidv4();
 
-        currentShapeId.current = id;
-        isPainting.current = true;
-        switch (action) {
-            case ACTIONS.RECTANGLE:
-                setRectangles((rectangle)=>[...rectangle,{id,x,y,height:20,width:20,fillColor,}]);
-                setAllElements((prev)=>[...prev,rectangles]);
-                break;
-            case ACTIONS.CIRCLE:
-                setCircles((circle)=>[...circle,{id,x,y,radius:20,fillColor}]);
-                setAllElements((prev)=>[...prev,circles]);
-                break;
-            case ACTIONS.ARROW:
-                setArrows((arrow)=>[...arrow,{id,points:[x,y,x+20,y+(-20)],fillColor}]);
-                setAllElements((prev)=>[...prev,arrows]);
-                break;
-            case ACTIONS.SCRIBBLE:
-                setScribbles((scribble)=>[...scribble,{id,points:[x,y],fillColor}]);
-                setAllElements((prev)=>[...prev,scribbles]);
-                break;
-            default:
-                break;
-        }
+    currentShapeId.current = id;
+    isPainting.current = true;
+    switch (action) {
+      case ACTIONS.RECTANGLE:
+        setAllElements((elements) => [...elements, { id, x, y, height: 20, width: 20, fillColor, type: ACTIONS.RECTANGLE }]);
+        setRectangles((rect)=>[...rect, { id, x, y, height: 20, width: 20, fillColor, type: ACTIONS.RECTANGLE }]);
+        break;
+      case ACTIONS.CIRCLE:
+        setAllElements((elements) => [...elements, { id, x, y, radius: 20, fillColor, type: ACTIONS.CIRCLE }]);
+        setCircles((circle)=>[...circle,{ id, x, y, radius: 20, fillColor, type: ACTIONS.CIRCLE }]);
+        break;
+      case ACTIONS.ARROW:
+        setAllElements((elements) => [...elements, { id, points: [x, y, x + 20, y + (-20)], fillColor, type: ACTIONS.ARROW }]);
+        setArrows((arrow)=>[...arrow,{ id, points: [x, y, x + 20, y + (-20)], fillColor, type: ACTIONS.ARROW }]);
+        break;
+      case ACTIONS.SCRIBBLE:
+        setAllElements((elements) => [...elements, { id, points: [x, y], fillColor, type: ACTIONS.SCRIBBLE }]);
+        setScribbles((scribble)=>[...scribble,{ id, points: [x, y], fillColor, type: ACTIONS.SCRIBBLE }])
+        break;
+      default:
+        break;
     }
-    const onPointerMove=()=>{
-        if(action===ACTIONS.SELECT || !isPainting.current) return;
-        const stage = stageRef.current;
-        const {x,y} = stage?.getPointerPosition() || {x: 0, y: 0};
-        isPainting.current = true;
-        switch (action) {
-            case ACTIONS.RECTANGLE:
-                setRectangles((rectangles)=>
-                rectangles.map((rectangle)=>{
-                    if(rectangle.id===currentShapeId.current){
-                        return {
-                            ...rectangle,
-                            width:x-rectangle.x,
-                            height:y-rectangle.y,
-                        }
-                    }return rectangle
-                }))
-                break;
-            case ACTIONS.CIRCLE:
-                setCircles((circles)=>
-                circles.map((circle)=>{
-                    if(circle.id===currentShapeId.current){
-                        return{
-                            ...circle,
-                            radius:((y-circle.y)**2 +(x-circle.x)**2)**0.5
-                        }
-                    }return circle
-                })
-                )
-                break;
-            case ACTIONS.ARROW:
-                setArrows((arrows)=>
-                arrows.map((arrow)=>{
-                    if(arrow.id===currentShapeId.current){
-                        return {...arrow,points:[arrow.points[0],arrow.points[1],x,y]}
-                    }
-                    return arrow
-                })
-                )
-                break;
-            case ACTIONS.SCRIBBLE:
-                setScribbles((scribbles)=>
-                scribbles.map((scribble)=>{
-                    if(scribble.id===currentShapeId.current){
-                        return{...scribble,points:[...scribble.points,x,y]}
-                    }return scribble
-                })
-                )
-                break;
-            default:
-                break;
-        }
+  };
+  const onPointerMove = () => {
+    if (action === ACTIONS.SELECT || !isPainting.current) return;
+    const stage = stageRef.current;
+    const { x, y } = stage?.getPointerPosition() || { x: 0, y: 0 };
+    isPainting.current = true;
+    switch (action) {
+      case ACTIONS.RECTANGLE:
+        setRectangles((rectangles) =>
+          rectangles.map((rectangle) => {
+            if (rectangle.id === currentShapeId.current) {
+              return {
+                ...rectangle,
+                width: x - rectangle.x,
+                height: y - rectangle.y,
+              };
+            }
+            return rectangle;
+          })
+        );
+        break;
+      case ACTIONS.CIRCLE:
+        setCircles((circles) =>
+          circles.map((circle) => {
+            if (circle.id === currentShapeId.current) {
+              return {
+                ...circle,
+                radius: ((y - circle.y) ** 2 + (x - circle.x) ** 2) ** 0.5,
+              };
+            }
+            return circle;
+          })
+        );
+        break;
+      case ACTIONS.ARROW:
+        setArrows((arrows) =>
+          arrows.map((arrow) => {
+            if (arrow.id === currentShapeId.current) {
+              return { ...arrow, points: [arrow.points[0], arrow.points[1], x, y] };
+            }
+            return arrow;
+          })
+        );
+        break;
+      case ACTIONS.SCRIBBLE:
+        setScribbles((scribbles) =>
+          scribbles.map((scribble) => {
+            if (scribble.id === currentShapeId.current) {
+              return { ...scribble, points: [...scribble.points, x, y] };
+            }
+            return scribble;
+          })
+        );
+        break;
+      default:
+        break;
     }
+  };
 
-    const handleClearCanvas=()=>{
-        setRectangles([]);
-        setCircles([]);
-        setArrows([]);
-        setScribbles([]);
-    }
-    const handleUndo=()=>{
-        setHistory((prev)=>[...prev,allElements[allElements.length-1]]);
-        switch (action) {
-            case ACTIONS.RECTANGLE:
-                setRectangles((prev)=>prev.slice(0,prev.length-1));
-                break;
-            case ACTIONS.CIRCLE:
-                setCircles((prev)=>prev.slice(0,prev.length-1));
-                break;
-            case ACTIONS.ARROW:
-                setArrows((prev)=>prev.slice(0,prev.length-1));
-                break;
-            case ACTIONS.SCRIBBLE:
-                setScribbles((prev)=>prev.slice(0,prev.length-1));
-                break;
-            default:
-                break;
-        }
-    }
-    const handleRedo=()=>{
-        switch (action) {
-            case ACTIONS.RECTANGLE:
-                setRectangles((prev)=>[...prev,history[history.length-1]]);
-                setHistory((prev)=>prev.slice(0,history.length-1));
-                break;
-            case ACTIONS.CIRCLE:
-                setCircles((prev)=>[...prev,history[history.length-1]]);
-                setHistory((prev)=>prev.slice(0,history.length-1));
-                break;
-            case ACTIONS.ARROW:
-                setArrows((prev)=>[...prev,history[history.length-1]]);
-                setHistory((prev)=>prev.slice(0,history.length-1));
-                break;
-            case ACTIONS.SCRIBBLE:
-                setScribbles((prev)=>[...prev,history[history.length-1]]);
-                setHistory((prev)=>prev.slice(0,history.length-1));
-                break;
-            default:
-                break;
-        }
-    }
+  const handleClearCanvas = () => {
+    setRectangles([]);
+    setCircles([]);
+    setArrows([]);
+    setScribbles([]);
+  };
 
-    const handleDownload=()=>{
-        const uri = stageRef.current.toDataURL();
-        const link = document.createElement("a");
-        link.download = "image.png";
-        link.href=uri;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+  const handleUndo = () => {
+    if (allElements.length === 0) return;
+
+    const lastElement = allElements[allElements.length - 1];
+    console.log(allElements);
+
+    switch (lastElement.type) {
+      case ACTIONS.RECTANGLE:
+        setRectangles((prev) => prev.filter((rect) => rect.id !== lastElement.id));
+        setHistory((prev)=>[...prev,rectangles[rectangles.length-1]]);
+        break;
+      case ACTIONS.CIRCLE:
+        setCircles((prev) => prev.filter((circle) => circle.id !== lastElement.id));
+        setHistory((prev)=>[...prev,circles[circles.length-1]]);
+        break;
+      case ACTIONS.ARROW:
+        setArrows((prev) => prev.filter((arrow) => arrow.id !== lastElement.id));
+        setHistory((prev)=>[...prev,arrows[arrows.length-1]]);
+        break;
+      case ACTIONS.SCRIBBLE:
+        setScribbles((prev) => prev.filter((scribble) => scribble.id !== lastElement.id));
+        setHistory((prev)=>[...prev,scribbles[scribbles.length-1]]);
+        break;
+      default:
+        break;
     }
+    setAllElements((prev) => prev.slice(0, prev.length - 1));
+  };
+
+  const handleRedo = () => {
+    if (history.length === 0) return;
+
+    const nextElement = history[history.length - 1];
+    setHistory((prev) => prev.slice(0, prev.length - 1));
+    console.log(nextElement);
+
+    switch (nextElement.type) {
+      case ACTIONS.RECTANGLE:
+        setRectangles((prev) => [...prev, nextElement]);
+        break;
+      case ACTIONS.CIRCLE:
+        setCircles((prev) => [...prev, nextElement]);
+        break;
+      case ACTIONS.ARROW:
+        setArrows((prev) => [...prev, nextElement]);
+        break;
+      case ACTIONS.SCRIBBLE:
+        setScribbles((prev) => [...prev, nextElement]);
+        break;
+      default:
+        break;
+    }
+    setAllElements((prev) => [...prev, nextElement]);
+  };
+
+  const handleDownload = () => {
+    const uri = stageRef.current.toDataURL();
+    const link = document.createElement("a");
+    link.download = "image.png";
+    link.href = uri;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
     return (
         <div className=" relative w-full h-screen overflow-hidden">
