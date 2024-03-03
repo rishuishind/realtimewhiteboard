@@ -12,12 +12,18 @@ import {
   Rect,
   Stage,
 } from "react-konva";
-import {useRef, useState } from "react";
+import {useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { ACTIONS } from "../constants"
+import { useSelector } from "react-redux";
+import { storeType } from "../store";
+import { Socket } from "socket.io-client";
 
+interface Props{
+  socket:Socket
+}
 
-const Roompage = () => {
+const Roompage:React.FC<Props> = ({socket}) => {
     const stageRef= useRef<any>(null);
     const [action, setAction] = useState<string>(ACTIONS.SELECT)
     const [fillColor,setFillColor] = useState<string>("#ff0000");
@@ -28,11 +34,14 @@ const Roompage = () => {
     const [scribbles,setScribbles]=useState<any[]>([]);
     const [allElements,setAllElements] = useState<any[]>([]);
     const [history,setHistory] = useState<any[]>([]);
+    const [img,setImg] = useState();
 
     const isDraggable:boolean = action===ACTIONS.SELECT;
 
     const isPainting = useRef<boolean>(false);
     const currentShapeId:uuidv4 = useRef<string>();
+
+    const user = useSelector((state:storeType)=>state.user);
 
     const strokeColor = '#000000';
 
@@ -124,6 +133,8 @@ const Roompage = () => {
       default:
         break;
     }
+    const canvasImg = stage.toDataURL();
+    socket.emit("whiteboardData",canvasImg);
   };
 
   const handleClearCanvas = () => {
@@ -188,6 +199,12 @@ const Roompage = () => {
     setAllElements((prev) => [...prev, nextElement]);
   };
 
+  useEffect(()=>{
+    socket.on("whiteboardDataResponse",(data)=>{
+      setImg(data.imgURL);
+    })
+  },[socket]);
+
   const handleDownload = () => {
     const uri = stageRef.current.toDataURL();
     const link = document.createElement("a");
@@ -200,7 +217,7 @@ const Roompage = () => {
 
     return (
         <div className=" relative w-full h-screen overflow-hidden">
-            <div className="flex justify-center py-3">
+          {user.presenter && <div className="flex justify-center py-3">
                 <div className="flex gap-4  border-2 py-2 px-3 shadow-lg">
                     <button className={`text-2xl p-1 rounded ${action===ACTIONS.SELECT ? ' bg-violet-300': 'hover:bg-violet-200'}`} onClick={()=>{setAction(ACTIONS.SELECT)}} >
                         <GiArrowCursor/>
@@ -227,8 +244,9 @@ const Roompage = () => {
                     <button onClick={handleRedo} disabled={history.length<1} className="px-3 py-2 border-2 rounded font-bold hover:bg-blue-200 border-blue-600 text-blue-600">Redo</button>
                 </div>
                 <button className="ml-10 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold" onClick={handleClearCanvas}>Clear Canvas</button>
-            </div>
-            <Stage className="border-2 border-black" ref={stageRef} width={window.innerWidth} height={window.innerHeight} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove}>
+            </div>}
+            {!user.presenter && <div className=" text-center py-2"><h2>Welcome {user.name} to the Room</h2></div>}
+           {user.presenter &&  <Stage className="border-2 border-black" ref={stageRef} width={window.innerWidth} height={window.innerHeight} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove}>
                 <Layer>
                     <Rect
                     x={0}
@@ -243,7 +261,10 @@ const Roompage = () => {
                     {arrows.map((arrow)=>(<Arrow key={arrow.id} points={arrow.points} stroke={fillColor} strokeWidth={2} fill={arrow.fillColor} draggable={isDraggable}/>))}
                     {scribbles.map((scribble)=>(<Line key={scribble.id} lineCap="round" lineJoin="round" points={scribble.points} stroke={fillColor} strokeWidth={2} fill={scribble.fillColor} draggable={isDraggable} />))}
                 </Layer>
-            </Stage>
+            </Stage>}
+                {!user.presenter && <div className="h-full">
+                  <img className=" w-full h-full border-2 border-black" src={img} alt="real-time-img" />
+                  </div>}
         </div>
     );
 }

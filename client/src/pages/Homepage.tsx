@@ -1,9 +1,9 @@
 import Form from "../components/Forms"
 
-const Homepage = () => {
+const Homepage = ({socket}) => {
   return (
     <>
-    <Form/>
+    <Form socket={socket}/>
     </>
   )
 }
