@@ -15,12 +15,25 @@ import {
 import {useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { ACTIONS } from "../constants"
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { storeType } from "../store";
 import { Socket } from "socket.io-client";
+import { userActions } from "../store/UserSlice";
+import { initialUserType } from "../store/UserSlice";
 
 interface Props{
   socket:Socket
+}
+interface EveryType{
+  id:string,
+  x?:number,
+  y?:number,
+  points?:[number,number,number?,number?],
+  height?:number,
+  width?:number,
+  radius?:number,
+  fillColor:string,
+  type:string,
 }
 
 const Roompage:React.FC<Props> = ({socket}) => {
@@ -28,18 +41,20 @@ const Roompage:React.FC<Props> = ({socket}) => {
     const [action, setAction] = useState<string>(ACTIONS.SELECT)
     const [fillColor,setFillColor] = useState<string>("#ff0000");
 
-    const [rectangles,setRectangles] = useState<any[]>([]);
-    const [circles,setCircles] = useState<any[]>([]);
-    const [arrows,setArrows] = useState<any[]>([]);
-    const [scribbles,setScribbles]=useState<any[]>([]);
-    const [allElements,setAllElements] = useState<any[]>([]);
-    const [history,setHistory] = useState<any[]>([]);
+    const [rectangles,setRectangles] = useState<EveryType[]>([]);
+    const [circles,setCircles] = useState<EveryType[]>([]);
+    const [arrows,setArrows] = useState<EveryType[]>([]);
+    const [scribbles,setScribbles]=useState<EveryType[]>([]);
+    const [allElements,setAllElements] = useState<EveryType[]>([]);
+    const [history,setHistory] = useState<EveryType[]>([]);
     const [img,setImg] = useState();
 
     const isDraggable:boolean = action===ACTIONS.SELECT;
 
+    const dispatch = useDispatch();
+
     const isPainting = useRef<boolean>(false);
-    const currentShapeId:uuidv4 = useRef<string>();
+    const currentShapeId = useRef<string>();
 
     const user = useSelector((state:storeType)=>state.user);
 
@@ -76,6 +91,8 @@ const Roompage:React.FC<Props> = ({socket}) => {
       default:
         break;
     }
+    const canvasImg = stage.toDataURL();
+    socket.emit("whiteboardData",canvasImg);
   };
   const onPointerMove = () => {
     if (action === ACTIONS.SELECT || !isPainting.current) return;
@@ -138,10 +155,13 @@ const Roompage:React.FC<Props> = ({socket}) => {
   };
 
   const handleClearCanvas = () => {
+    const stage = stageRef.current;
     setRectangles([]);
     setCircles([]);
     setArrows([]);
     setScribbles([]);
+    const canvasImg = stage.toDataURL();
+    socket.emit("whiteboardData",canvasImg);
   };
 
   const handleUndo = () => {
@@ -205,6 +225,17 @@ const Roompage:React.FC<Props> = ({socket}) => {
     })
   },[socket]);
 
+  useEffect(()=>{
+    socket.on("userIsJoined",(data)=>{
+      dispatch(userActions.addUser(data.user));
+    })
+  },[socket,dispatch])
+  useEffect(()=>{
+    socket.on("allUsers",(data)=>{
+      dispatch(userActions.addUser(data.user));
+    })
+  },[socket,dispatch])
+
   const handleDownload = () => {
     const uri = stageRef.current.toDataURL();
     const link = document.createElement("a");
@@ -217,6 +248,7 @@ const Roompage:React.FC<Props> = ({socket}) => {
 
     return (
         <div className=" relative w-full h-screen overflow-hidden">
+          <h2 className=" text-blue-600 text-center">Users online: {user.user.length}</h2>
           {user.presenter && <div className="flex justify-center py-3">
                 <div className="flex gap-4  border-2 py-2 px-3 shadow-lg">
                     <button className={`text-2xl p-1 rounded ${action===ACTIONS.SELECT ? ' bg-violet-300': 'hover:bg-violet-200'}`} onClick={()=>{setAction(ACTIONS.SELECT)}} >
@@ -245,8 +277,14 @@ const Roompage:React.FC<Props> = ({socket}) => {
                 </div>
                 <button className="ml-10 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold" onClick={handleClearCanvas}>Clear Canvas</button>
             </div>}
+            <div className="border-2 border-red-700 w-96 h-screen absolute top-0 bg-black">
+              <h3 className=" text-slate-100 text-center mt-10">All Users</h3>
+              <div>
+                {user.user.map((us:initialUserType)=><ul key={us.userId}><li className=" text-slate-100">{`${us.name} ${user.userId === us.userId ? '(you)':''} `}</li></ul>)}
+              </div>
+            </div>
             {!user.presenter && <div className=" text-center py-2"><h2>Welcome {user.name} to the Room</h2></div>}
-           {user.presenter &&  <Stage className="border-2 border-black" ref={stageRef} width={window.innerWidth} height={window.innerHeight} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove}>
+           {user.presenter &&  <Stage className="absolute left-96 border-2 border-black" ref={stageRef} width={window.innerWidth} height={window.innerHeight} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove}>
                 <Layer>
                     <Rect
                     x={0}
@@ -262,7 +300,7 @@ const Roompage:React.FC<Props> = ({socket}) => {
                     {scribbles.map((scribble)=>(<Line key={scribble.id} lineCap="round" lineJoin="round" points={scribble.points} stroke={fillColor} strokeWidth={2} fill={scribble.fillColor} draggable={isDraggable} />))}
                 </Layer>
             </Stage>}
-                {!user.presenter && <div className="h-full">
+                {!user.presenter && <div className="absolute left-96 w-full h-full">
                   <img className=" w-full h-full border-2 border-black" src={img} alt="real-time-img" />
                   </div>}
         </div>

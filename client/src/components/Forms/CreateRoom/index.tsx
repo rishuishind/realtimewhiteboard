@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux";
 import { userActions } from "../../../store/UserSlice";
 import { v4 as uuidv4 } from "uuid";
@@ -28,6 +28,7 @@ const CreateRoom:React.FC<Props> = ({socket}) => {
     socket.emit("userJoined",roomData);
     navigate(`/room/${uid}`);
   }
+
   return (
     <div className="border-2 border-black h-96 w-auto bg-white">
       <h3 className="font-bold text-center text-blue-700">Create Room</h3>
