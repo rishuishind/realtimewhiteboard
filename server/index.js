@@ -1,5 +1,5 @@
 const express = require('express');
-const { userJoin, userLeave, getUsers } = require('./utils/users');
+const { userJoin, userLeave, getUsers, getUser } = require('./utils/users');
 const app = express();
 
 const server = require('http').createServer(app);
@@ -19,8 +19,9 @@ io.on('connection', (socket) => {
         const { name, userId, roomId, host, presenter } = data;
         socket.join(roomId);
         globalRoomId = roomId
-        const user = userJoin(name, userId, roomId, host, presenter);
+        const user = userJoin(name, userId, roomId, host, presenter,);
         socket.emit("userIsJoined", { success: true, user });
+        socket.broadcast.to(roomId).emit("broadcastMessageUserJoin", name);
         socket.broadcast.to(roomId).emit("allUsers", { user });
         socket.broadcast.to(roomId).emit("whiteboardDataResponse", {
             imgURL: globalImageUrl

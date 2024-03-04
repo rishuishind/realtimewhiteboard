@@ -1,17 +1,21 @@
 
 const users = []
 
-const userJoin = (name, userId, roomId, host, presenter) => {
-    const user = { userId, name, roomId, host, presenter };
+const userJoin = (name, userId, roomId, host, presenter, socketId) => {
+    const user = { userId, name, roomId, host, presenter, socketId };
     users.push(user);
-    return users;
+    return users.filter((us) => us.roomId === roomId);
 }
 
-const userLeave = (userId) => {
-    const index = users.findIndex((user) => user.userId === userId);
+const userLeave = (id) => {
+    const index = users.findIndex((user) => user.socketId === id);
     if (index !== -1) {
         return users.splice(index, 1)[0];
     }
+}
+
+const getUser = (id) => {
+    return users.find((user) => user.socketId === id);
 }
 
 const getUsers = (roomId) => {
@@ -27,5 +31,6 @@ const getUsers = (roomId) => {
 module.exports = {
     userJoin,
     userLeave,
+    getUser,
     getUsers,
 }

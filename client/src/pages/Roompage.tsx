@@ -20,6 +20,7 @@ import { storeType } from "../store";
 import { Socket } from "socket.io-client";
 import { userActions } from "../store/UserSlice";
 import { initialUserType } from "../store/UserSlice";
+import { toast } from "react-toastify";
 
 interface Props{
   socket:Socket
@@ -277,7 +278,7 @@ const Roompage:React.FC<Props> = ({socket}) => {
                 </div>
                 <button className="ml-10 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold" onClick={handleClearCanvas}>Clear Canvas</button>
             </div>}
-            <div className="border-2 border-red-700 w-96 h-screen absolute top-0 bg-black">
+            <div className=" w-96 h-screen absolute top-0 bg-black">
               <h3 className=" text-slate-100 text-center mt-10">All Users</h3>
               <div>
                 {user.user.map((us:initialUserType)=><ul key={us.userId}><li className=" text-slate-100">{`${us.name} ${user.userId === us.userId ? '(you)':''} `}</li></ul>)}
