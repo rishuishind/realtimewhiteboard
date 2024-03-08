@@ -19,13 +19,22 @@ io.on('connection', (socket) => {
         const { name, userId, roomId, host, presenter } = data;
         socket.join(roomId);
         globalRoomId = roomId
-        const user = userJoin(name, userId, roomId, host, presenter,);
+        const user = userJoin(name, userId, roomId, host, presenter, socket.id);
+        console.log('This is user=> ', user);
         socket.emit("userIsJoined", { success: true, user });
         socket.broadcast.to(roomId).emit("broadcastMessageUserJoin", name);
         socket.broadcast.to(roomId).emit("allUsers", { user });
         socket.broadcast.to(roomId).emit("whiteboardDataResponse", {
             imgURL: globalImageUrl
         });
+    })
+    socket.on("disconnect", () => {
+        const user = getUser(socket.id);
+        userLeave(socket.id);
+        const allUser = getUsers(globalRoomId);
+        console.log('all users are ', allUser);
+        socket.broadcast.to(globalRoomId).emit("userLeaveBroadcastMessage", user.name);
+        socket.broadcast.to(globalRoomId).emit("allUserAfterLeave", allUser);
     })
     socket.on("whiteboardData", (data) => {
         globalImageUrl = data;

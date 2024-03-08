@@ -1,6 +1,11 @@
 import Form from "../components/Forms"
+import { Socket } from "socket.io-client"
 
-const Homepage = ({socket}) => {
+interface HomepageProps {
+  socket: Socket;
+}
+
+const Homepage:React.FC<HomepageProps> = ({socket}) => {
   return (
     <>
     <Form socket={socket}/>

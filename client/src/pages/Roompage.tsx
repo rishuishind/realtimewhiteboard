@@ -15,12 +15,11 @@ import {
 import {useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { ACTIONS } from "../constants"
-import { useDispatch, useSelector } from "react-redux";
-import { storeType } from "../store";
+import {useSelector } from "react-redux";
 import { Socket } from "socket.io-client";
-import { userActions } from "../store/UserSlice";
 import { initialUserType } from "../store/UserSlice";
-import { toast } from "react-toastify";
+import { RootState } from "../store";
+import Konva from "konva";
 
 interface Props{
   socket:Socket
@@ -38,7 +37,7 @@ interface EveryType{
 }
 
 const Roompage:React.FC<Props> = ({socket}) => {
-    const stageRef= useRef<any>(null);
+    const stageRef= useRef<Konva.Stage>(null);
     const [action, setAction] = useState<string>(ACTIONS.SELECT)
     const [fillColor,setFillColor] = useState<string>("#ff0000");
 
@@ -52,12 +51,10 @@ const Roompage:React.FC<Props> = ({socket}) => {
 
     const isDraggable:boolean = action===ACTIONS.SELECT;
 
-    const dispatch = useDispatch();
-
     const isPainting = useRef<boolean>(false);
     const currentShapeId = useRef<string>();
 
-    const user = useSelector((state:storeType)=>state.user);
+    const user = useSelector((state:RootState)=>state.user);
 
     const strokeColor = '#000000';
 
@@ -67,6 +64,7 @@ const Roompage:React.FC<Props> = ({socket}) => {
   const onPointerDown = () => {
     if (action === ACTIONS.SELECT) return;
     const stage = stageRef.current;
+    console.log('On pointer down ',stage?.getPointerPosition());
     const { x, y } = stage.getPointerPosition();
     const id = uuidv4();
 
@@ -92,7 +90,7 @@ const Roompage:React.FC<Props> = ({socket}) => {
       default:
         break;
     }
-    const canvasImg = stage.toDataURL();
+    const canvasImg = stage?.toDataURL();
     socket.emit("whiteboardData",canvasImg);
   };
   const onPointerMove = () => {
@@ -151,7 +149,7 @@ const Roompage:React.FC<Props> = ({socket}) => {
       default:
         break;
     }
-    const canvasImg = stage.toDataURL();
+    const canvasImg = stage?.toDataURL();
     socket.emit("whiteboardData",canvasImg);
   };
 
@@ -170,6 +168,8 @@ const Roompage:React.FC<Props> = ({socket}) => {
 
     const lastElement = allElements[allElements.length - 1];
     console.log(allElements);
+
+    const stage = stageRef.current;
 
     switch (lastElement.type) {
       case ACTIONS.RECTANGLE:
@@ -192,6 +192,8 @@ const Roompage:React.FC<Props> = ({socket}) => {
         break;
     }
     setAllElements((prev) => prev.slice(0, prev.length - 1));
+    const canvasImg = stage?.toDataURL();
+    socket.emit("whiteboardData",canvasImg);
   };
 
   const handleRedo = () => {
@@ -220,25 +222,14 @@ const Roompage:React.FC<Props> = ({socket}) => {
     setAllElements((prev) => [...prev, nextElement]);
   };
 
-  useEffect(()=>{
+    useEffect(()=>{
     socket.on("whiteboardDataResponse",(data)=>{
       setImg(data.imgURL);
     })
-  },[socket]);
-
-  useEffect(()=>{
-    socket.on("userIsJoined",(data)=>{
-      dispatch(userActions.addUser(data.user));
-    })
-  },[socket,dispatch])
-  useEffect(()=>{
-    socket.on("allUsers",(data)=>{
-      dispatch(userActions.addUser(data.user));
-    })
-  },[socket,dispatch])
+  },[socket,img]);
 
   const handleDownload = () => {
-    const uri = stageRef.current.toDataURL();
+    const uri = stageRef.current?.toDataURL();
     const link = document.createElement("a");
     link.download = "image.png";
     link.href = uri;
@@ -246,8 +237,7 @@ const Roompage:React.FC<Props> = ({socket}) => {
     link.click();
     document.body.removeChild(link);
   };
-
-    return (
+  return (
         <div className=" relative w-full h-screen overflow-hidden">
           <h2 className=" text-blue-600 text-center">Users online: {user.user.length}</h2>
           {user.presenter && <div className="flex justify-center py-3">
@@ -278,7 +268,7 @@ const Roompage:React.FC<Props> = ({socket}) => {
                 </div>
                 <button className="ml-10 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold" onClick={handleClearCanvas}>Clear Canvas</button>
             </div>}
-            <div className=" w-96 h-screen absolute top-0 bg-black">
+            <div className="w-96 h-screen absolute top-0 bg-black">
               <h3 className=" text-slate-100 text-center mt-10">All Users</h3>
               <div>
                 {user.user.map((us:initialUserType)=><ul key={us.userId}><li className=" text-slate-100">{`${us.name} ${user.userId === us.userId ? '(you)':''} `}</li></ul>)}
